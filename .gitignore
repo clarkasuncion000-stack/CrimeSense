@@ -1,0 +1,25 @@
+# Configuration files with sensitive data
+configuration/database.php
+configuration/session.php
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Node modules (if using any)
+node_modules/
+
+# Environment files
+.env
+.env.local
