@@ -1,7 +1,9 @@
 <?php
+// Protect this page so only logged-in users can open it.
 require_once("../configuration/session.php");
 require_once("../configuration/database.php");
 
+// Include common app layout elements.
 include("../includes/header.php");
 include("../includes/sidebar.php");
 ?>
@@ -32,9 +34,10 @@ Crime Hotspot Analysis (Kernel Density Estimation)
 <option value="">All Crime Types</option>
 
 <?php
-$q=mysqli_query($conn,"SELECT * FROM crime_types ORDER BY crime_name");
+// Load all crime types into the filter dropdown.
+$q = mysqli_query($conn, "SELECT * FROM crime_types ORDER BY crime_name");
 
-while($r=mysqli_fetch_assoc($q)){
+while($r = mysqli_fetch_assoc($q)){
 ?>
 
 <option value="<?= $r['crimeTypeID']; ?>">
@@ -60,7 +63,6 @@ while($r=mysqli_fetch_assoc($q)){
 <button class="btn btn-primary w-100" id="btnLoad">
 
 <i class="bi bi-fire"></i>
-
 Generate Hotspot
 
 </button>
@@ -81,174 +83,143 @@ Generate Hotspot
 
 <script>
 
-var map=L.map('map');
+// Initialize the Leaflet map for hotspot visualization.
+var map = L.map('map');
 
 L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 {
-    maxZoom:19
+    maxZoom: 19
 }).addTo(map);
 
-var heatLayer=null;
+var heatLayer = null;
 
-//=========================
-// Load Boundary
-//=========================
+// --------------------------------------------------
+// Load the Agoo municipal boundary onto the map
+// --------------------------------------------------
 
 function loadBoundary(){
 
 fetch("../assets/geojson/agoo_boundary.geojson")
-
-.then(res=>res.json())
-
+.then(res => res.json())
 .then(function(data){
 
-var boundary=L.geoJSON(data,{
+    var boundary = L.geoJSON(data, {
+        style: {
+            color: "red",
+            weight: 3,
+            fillColor: "yellow",
+            fillOpacity: 0.10
+        }
+    }).addTo(map);
 
-style:{
-color:"red",
-weight:3,
-fillColor:"yellow",
-fillOpacity:0.10
-}
-
-}).addTo(map);
-
-map.fitBounds(boundary.getBounds());
+    map.fitBounds(boundary.getBounds());
 
 });
 
 }
 
-//=========================
-// Load Heatmap
-//=========================
+// --------------------------------------------------
+// Load hotspot data from the server and render a heatmap
+// --------------------------------------------------
 
 function loadData(){
 
-if(heatLayer){
-map.removeLayer(heatLayer);
-}
+    if(heatLayer){
+        map.removeLayer(heatLayer);
+    }
 
-$.getJSON("hotspot_data.php",{
+    $.getJSON("hotspot_data.php", {
+        crimeType: $("#crimeType").val(),
+        from: $("#fromDate").val(),
+        to: $("#toDate").val()
+    }, function(data){
 
-crimeType:$("#crimeType").val(),
-from:$("#fromDate").val(),
-to:$("#toDate").val()
+        let heat = [];
 
-},function(data){
+        data.forEach(function(row){
+            heat.push([
+                row.lat,
+                row.lng,
+                row.count
+            ]);
+        });
 
-let heat=[];
+        heatLayer = L.heatLayer(heat, {
+            radius: 35,
+            blur: 25,
+            maxZoom: 17,
+            gradient: {
+                0.20: "blue",
+                0.40: "lime",
+                0.60: "yellow",
+                0.80: "orange",
+                1.00: "red"
+            }
+        }).addTo(map);
 
-data.forEach(function(row){
-
-heat.push([
-row.lat,
-row.lng,
-row.count
-]);
-
-});
-
-heatLayer=L.heatLayer(heat,{
-
-radius:35,
-blur:25,
-maxZoom:17,
-
-gradient:{
-
-0.20:"blue",
-0.40:"lime",
-0.60:"yellow",
-0.80:"orange",
-1.00:"red"
+    });
 
 }
 
-}).addTo(map);
-
-});
-
-}
-
-//=========================
-// Button
-//=========================
+// --------------------------------------------------
+// Trigger hotspot generation when the user clicks the button
+// --------------------------------------------------
 
 $("#btnLoad").click(function(){
-
-loadData();
-
+    loadData();
 });
 
-// Auto Reload
-
+// Reload the heatmap automatically whenever filters change.
 $("#crimeType,#fromDate,#toDate").change(function(){
-
-loadData();
-
+    loadData();
 });
 
-//=========================
-// Legend
-//=========================
+// --------------------------------------------------
+// Add a custom legend explaining the hotspot colors
+// --------------------------------------------------
 
-var legend=L.control({position:"bottomleft"});
+var legend = L.control({position: "bottomleft"});
 
-legend.onAdd=function(){
+legend.onAdd = function(){
 
-var div=L.DomUtil.create("div");
+    var div = L.DomUtil.create("div");
+    div.style.background = "white";
+    div.style.padding = "10px";
+    div.style.borderRadius = "8px";
+    div.style.boxShadow = "0 0 10px rgba(0,0,0,.3)";
+    div.style.lineHeight = "25px";
 
-div.style.background="white";
-div.style.padding="10px";
-div.style.borderRadius="8px";
-div.style.boxShadow="0 0 10px rgba(0,0,0,.3)";
-div.style.lineHeight="25px";
+    div.innerHTML = `
+        <b>Hotspot Legend</b>
+        <hr>
+        🟦 Low Density<br>
+        🟩 Moderate Density<br>
+        🟨 High Density<br>
+        🟧 Very High Density<br>
+        🟥 Extreme Hotspot
+        <hr>
+        <span style="
+            display:inline-block;
+            width:18px;
+            height:18px;
+            background:rgba(255,255,0,.2);
+            border:2px solid red;
+            margin-right:8px;
+        "></span>
+        Agoo Boundary
+    `;
 
-div.innerHTML=`
-
-<b>Hotspot Legend</b>
-
-<hr>
-
-🟦 Low Density<br>
-
-🟩 Moderate Density<br>
-
-🟨 High Density<br>
-
-🟧 Very High Density<br>
-
-🟥 Extreme Hotspot
-
-<hr>
-
-<span style="
-display:inline-block;
-width:18px;
-height:18px;
-background:rgba(255,255,0,.2);
-border:2px solid red;
-margin-right:8px;
-"></span>
-
-Agoo Boundary
-
-`;
-
-return div;
-
+    return div;
 };
 
 legend.addTo(map);
 
-//=========================
-// Initialize
-//=========================
+// --------------------------------------------------
+// Initialize the map with the boundary and hotspots
+// --------------------------------------------------
 
 loadBoundary();
-
 loadData();
 
 </script>

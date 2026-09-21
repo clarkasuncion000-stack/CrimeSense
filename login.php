@@ -1,6 +1,9 @@
 <?php
+// Start the PHP session so we can check whether the user is already logged in.
 session_start();
 
+// If the user is already authenticated, send them to the admin dashboard.
+// This prevents a logged-in user from seeing the login page again.
 if(isset($_SESSION['userID'])){
     header("Location: admin/dashboard.php");
     exit();
@@ -14,14 +17,14 @@ if(isset($_SESSION['userID'])){
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CrimSense - Login</title>
 
-    <!-- Bootstrap 5 -->
+    <!-- Bootstrap 5 framework for layout and form styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
+    <!-- Bootstrap Icons for decorative icons in the login page -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-
+        /* Center the login form vertically and horizontally on the page */
         body{
             background:#eef3f8;
             height:100vh;
@@ -31,6 +34,7 @@ if(isset($_SESSION['userID'])){
             font-family:Segoe UI, sans-serif;
         }
 
+        /* Card container styling for the login panel */
         .login-card{
             width:420px;
             border:none;
@@ -38,6 +42,7 @@ if(isset($_SESSION['userID'])){
             box-shadow:0 10px 25px rgba(0,0,0,.15);
         }
 
+        /* Blue header area of the card */
         .card-header{
             background:#0d6efd;
             color:white;
@@ -46,31 +51,34 @@ if(isset($_SESSION['userID'])){
             padding:30px;
         }
 
+        /* Logo icon size */
         .logo{
             font-size:55px;
         }
 
+        /* System name styling */
         .system-title{
             font-weight:bold;
             font-size:28px;
         }
 
+        /* Make the login button fill the available width */
         .btn-login{
             width:100%;
         }
 
+        /* Input height styling */
         .form-control{
             height:45px;
         }
-
     </style>
-
 </head>
 
 <body>
 
 <div class="card login-card">
 
+    <!-- Top section of the login screen with brand name and icon -->
     <div class="card-header">
 
         <div class="logo">
@@ -87,6 +95,7 @@ if(isset($_SESSION['userID'])){
 
     </div>
 
+    <!-- Form area for username and password -->
     <div class="card-body p-4">
  
         <form action="authenticate.php" method="POST">
@@ -131,6 +140,7 @@ if(isset($_SESSION['userID'])){
 
     </div>
 
+    <!-- Footer with the current year -->
     <div class="card-footer text-center">
 
         <small>
@@ -141,11 +151,10 @@ if(isset($_SESSION['userID'])){
 
 </div>
 
-
-<!-- Login Error Modal -->
+<!-- Include Bootstrap JavaScript so modal popup can work -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Login Error Modal -->
+<!-- Error modal shown when login fails -->
 <div class="modal fade" id="loginErrorModal" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -188,13 +197,15 @@ if(isset($_SESSION['userID'])){
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    // Create the Bootstrap modal instance when the page loads
     var modal = new bootstrap.Modal(
         document.getElementById("loginErrorModal")
     );
 
+    // Show the login error popup
     modal.show();
 
-    // Remove ?error from the URL
+    // Remove the ?error query string from the URL after the message is shown
     window.history.replaceState({}, document.title, window.location.pathname);
 
 });

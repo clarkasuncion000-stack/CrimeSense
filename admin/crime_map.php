@@ -1,12 +1,15 @@
 <?php
+// Protect the page and load the shared layout and database connection.
 require_once("../configuration/session.php");
 require_once("../configuration/database.php");
 
 include("../includes/header.php");
 include("../includes/sidebar.php");
 ?>
+
 <style>
 
+/* Styling for the custom map legend displayed on the crime map. */
 .legend{
     background:#fff;
     padding:12px;
@@ -105,7 +108,7 @@ Crime Map
 
                     <div class="row">
 
-                        <!-- Crime Type -->
+                        <!-- Crime Type dropdown -->
                         <div class="col-md-6 mb-3">
 
                             <label>Crime Type</label>
@@ -115,9 +118,9 @@ Crime Map
                                 <option value="">Select Crime Type</option>
 
                                 <?php
-                                $crime = mysqli_query($conn,"SELECT * FROM crime_types ORDER BY crime_name");
+                                $crime = mysqli_query($conn, "SELECT * FROM crime_types ORDER BY crime_name");
 
-                                while($c=mysqli_fetch_assoc($crime)){
+                                while($c = mysqli_fetch_assoc($crime)){
                                 ?>
 
                                 <option value="<?= $c['crimeTypeID']; ?>">
@@ -130,7 +133,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Barangay -->
+                        <!-- Barangay dropdown -->
                         <div class="col-md-6 mb-3">
 
                             <label>Barangay</label>
@@ -140,9 +143,9 @@ Crime Map
                                 <option value="">Select Barangay</option>
 
                                 <?php
-                                $brgy=mysqli_query($conn,"SELECT * FROM barangays ORDER BY barangay_name");
+                                $brgy = mysqli_query($conn, "SELECT * FROM barangays ORDER BY barangay_name");
 
-                                while($b=mysqli_fetch_assoc($brgy)){
+                                while($b = mysqli_fetch_assoc($brgy)){
                                 ?>
 
                                 <option value="<?= $b['barangayID']; ?>">
@@ -155,7 +158,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Date -->
+                        <!-- Date committed -->
                         <div class="col-md-6 mb-3">
 
                             <label>Date Committed</label>
@@ -168,7 +171,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Time -->
+                        <!-- Time committed -->
                         <div class="col-md-6 mb-3">
 
                             <label>Time Committed</label>
@@ -181,7 +184,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Map -->
+                        <!-- Map area where user picks the crime location -->
                         <div class="col-md-12 mb-3">
 
                             <label>Select Crime Location</label>
@@ -192,7 +195,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Latitude -->
+                        <!-- Latitude value populated by the map click -->
                         <div class="col-md-6 mb-3">
 
                             <label>Latitude</label>
@@ -206,7 +209,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Longitude -->
+                        <!-- Longitude value populated by the map click -->
                         <div class="col-md-6 mb-3">
 
                             <label>Longitude</label>
@@ -230,7 +233,7 @@ Crime Map
                                 readonly>
                         </div>
 
-                        <!-- Description -->
+                        <!-- Free-form description of the incident -->
                         <div class="col-md-12 mb-3">
 
                             <label>Description</label>
@@ -243,7 +246,7 @@ Crime Map
 
                         </div>
 
-                        <!-- Status -->
+                        <!-- Case status -->
                         <div class="col-md-12 mb-3">
 
                             <label>Status</label>
@@ -281,24 +284,22 @@ Crime Map
         </div>
     </div>
 </div>
-<script>
 
-<!--Main Map-->
-var crimeMap = L.map('map').setView([16.333,120.350],13);
+<script>
+// Create the main map that displays all saved crime reports.
+var crimeMap = L.map('map').setView([16.333,120.350], 13);
 console.log("Map created:", crimeMap);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom:25,
     attribution:'© OpenStreetMap'
 }).addTo(crimeMap);
-
 </script>
 
-<!--load all crimes from table-->
-
+<!-- Load all crimes from the database and place markers on the map -->
 <script>
 
 <?php
-
 $sql = "SELECT
         c.crimeID,
         c.date_committed,
@@ -313,11 +314,11 @@ $sql = "SELECT
         b.barangay_name
 FROM crime_reports c
 INNER JOIN crime_types ct
-ON c.crimeTypeID = ct.crimeTypeID
+    ON c.crimeTypeID = ct.crimeTypeID
 INNER JOIN barangays b
-ON c.barangayID = b.barangayID";
+    ON c.barangayID = b.barangayID";
 
-$result = mysqli_query($conn,$sql);
+$result = mysqli_query($conn, $sql);
 
 while($row = mysqli_fetch_assoc($result)){
 ?>
@@ -332,7 +333,7 @@ var icon = L.icon({
 L.marker([
     <?= $row['latitude']; ?>,
     <?= $row['longitude']; ?>
-],{
+], {
     icon: icon
 })
 .addTo(crimeMap)
@@ -344,8 +345,8 @@ Crime Report #<?= $row['crimeID']; ?>
 </h6>
 
 <b>Crime:</b> <?= addslashes($row['crime_name']); ?><br>
-<b>Date:</b> <?= date("F d, Y",strtotime($row['date_committed'])); ?><br>
-<b>Time:</b> <?= date("h:i A",strtotime($row['time_committed'])); ?><br>
+<b>Date:</b> <?= date("F d, Y", strtotime($row['date_committed'])); ?><br>
+<b>Time:</b> <?= date("h:i A", strtotime($row['time_committed'])); ?><br>
 <b>Barangay:</b> <?= addslashes($row['barangay_name']); ?><br>
 <b>Address:</b> <?= addslashes($row['address']); ?><br>
 <b>Status:</b> <?= addslashes($row['status']); ?><br><br>
@@ -359,7 +360,7 @@ Crime Report #<?= $row['crimeID']; ?>
 
 </script>
 
-<!--Modal Map-->
+<!-- Modal map logic: clicking the map sets the crime coordinates and address -->
 <script>
 
 var modalMap;
@@ -369,13 +370,13 @@ document.getElementById('addCrimeModal').addEventListener('shown.bs.modal', func
 
     if (!modalMap) {
 
-        modalMap = L.map('crimeLocationMap').setView([16.333,120.350],13);
+        modalMap = L.map('crimeLocationMap').setView([16.333,120.350], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom:19,
             attribution:'© OpenStreetMap'
         }).addTo(modalMap);
-        
+
         loadBoundary(modalMap);
 
         modalMap.on('click', function(e){
@@ -384,12 +385,14 @@ document.getElementById('addCrimeModal').addEventListener('shown.bs.modal', func
                 modalMap.removeLayer(marker);
             }
 
+            // Place a marker on the clicked location.
             marker = L.marker(e.latlng).addTo(modalMap);
 
+            // Save coordinates into the hidden form fields.
             latitude.value = e.latlng.lat.toFixed(7);
             longitude.value = e.latlng.lng.toFixed(7);
 
-            // Reverse Geocoding
+            // Use reverse geocoding to turn coordinates into a readable address.
             fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}`)
             .then(response => response.json())
             .then(data => {
@@ -403,7 +406,7 @@ document.getElementById('addCrimeModal').addEventListener('shown.bs.modal', func
                 }
 
             })
-            .catch(err=>{
+            .catch(err => {
                 console.error(err);
                 document.getElementById("address").value = "";
             });
@@ -414,13 +417,13 @@ document.getElementById('addCrimeModal').addEventListener('shown.bs.modal', func
 
     setTimeout(function(){
         modalMap.invalidateSize();
-    },200);
+    }, 200);
 
 });
 
 </script>
 
-<!--Crime Markers-->
+<!-- Load the Agoo municipal boundary and display it over the crime map -->
 <script>
 fetch('../assets/geojson/agoo_boundary.geojson')
 .then(response => {
@@ -431,7 +434,7 @@ fetch('../assets/geojson/agoo_boundary.geojson')
 
     console.log("GeoJSON:", data);
 
-    var boundary = L.geoJSON(data,{
+    var boundary = L.geoJSON(data, {
         style:{
             color:'red',
             weight:2,
@@ -443,26 +446,23 @@ fetch('../assets/geojson/agoo_boundary.geojson')
     console.log("Layers:", boundary.getLayers().length);
 
     boundary.addTo(crimeMap);
-
     crimeMap.fitBounds(boundary.getBounds());
 
 })
-.catch(error=>{
+.catch(error => {
     console.error(error);
 });
 </script>
 
- 
-
-<!--reusable geojson function-->
+<!-- Reusable boundary helper for both main map and modal map -->
 <script>
-    function loadBoundary(map){
+function loadBoundary(map){
 
     fetch('../assets/geojson/agoo_boundary.geojson')
     .then(response => response.json())
-    .then(data=>{
+    .then(data => {
 
-        var boundary = L.geoJSON(data,{
+        var boundary = L.geoJSON(data, {
             style:{
                 color:'red',
                 weight:2,
@@ -474,12 +474,12 @@ fetch('../assets/geojson/agoo_boundary.geojson')
         map.fitBounds(boundary.getBounds());
 
     })
-    .catch(err=>console.error(err));
+    .catch(err => console.error(err));
 
 }
 </script>
 
-<!--Legend for markers--> 
+<!-- Legend for marker categories -->
 <script>
 
 var legend = L.control({position:'bottomleft'});
@@ -491,9 +491,9 @@ legend.onAdd = function(){
     div.innerHTML = "<h6><b>Crime Legend</b></h6>";
 
     <?php
-    $legend = mysqli_query($conn,"SELECT crime_name, icon FROM crime_types ORDER BY crime_name");
+    $legend = mysqli_query($conn, "SELECT crime_name, icon FROM crime_types ORDER BY crime_name");
 
-    while($l=mysqli_fetch_assoc($legend)){
+    while($l = mysqli_fetch_assoc($legend)){
     ?>
 
     div.innerHTML += `

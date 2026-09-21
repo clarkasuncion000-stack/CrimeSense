@@ -1,5 +1,8 @@
 <?php
+// Start the session to verify that the current user is logged in.
 session_start();
+
+// Load database access and session protection before showing the page content.
 require_once("../configuration/database.php");
 require_once("../configuration/session.php");
 ?>
@@ -45,7 +48,7 @@ require_once("../configuration/session.php");
                 <tbody>
 
 <?php
-
+// Query the crime table and join related crime type and barangay names.
 $sql = "SELECT
             c.crimeID,
             c.date_committed,
@@ -60,9 +63,10 @@ $sql = "SELECT
             ON c.barangayID = b.barangayID
         ORDER BY c.date_committed DESC, c.time_committed DESC";
 
-$result = mysqli_query($conn,$sql);
+$result = mysqli_query($conn, $sql);
 
-while($row=mysqli_fetch_assoc($result))
+// Loop through every crime record and print it as a table row.
+while($row = mysqli_fetch_assoc($result))
 {
 ?>
 
@@ -70,9 +74,9 @@ while($row=mysqli_fetch_assoc($result))
 
 <td><?= $row['crimeID']; ?></td>
 
-<td><?= date("F d, Y",strtotime($row['date_committed'])); ?></td>
+<td><?= date("F d, Y", strtotime($row['date_committed'])); ?></td>
 
-<td><?= date("h:i A",strtotime($row['time_committed'])); ?></td>
+<td><?= date("h:i A", strtotime($row['time_committed'])); ?></td>
 
 <td><?= $row['crime_name']; ?></td>
 
@@ -81,12 +85,12 @@ while($row=mysqli_fetch_assoc($result))
 <td>
 
 <?php
-
-if($row['status']=="Open")
+// Display a colored badge depending on the case status.
+if($row['status'] == "Open")
 {
     echo "<span class='badge bg-danger'>Open</span>";
 }
-elseif($row['status']=="Solved")
+elseif($row['status'] == "Solved")
 {
     echo "<span class='badge bg-success'>Solved</span>";
 }
@@ -94,7 +98,6 @@ else
 {
     echo "<span class='badge bg-secondary'>Closed</span>";
 }
-
 ?>
 
 </td>

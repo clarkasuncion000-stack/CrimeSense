@@ -2,23 +2,18 @@
 
 <div class="container-fluid">
 
-<h4 class="mb-0">
+    <!-- Page title shown in the top navigation area -->
+    <h4 class="mb-0">
+        Dashboard
+    </h4>
 
-Dashboard
-
-</h4>
-
-<div>
-
-Welcome,
-
-<strong>
-
-<?php echo $_SESSION['fullname']; ?>
-
-</strong>
-
-</div>
+    <!-- Display the logged-in user's full name -->
+    <div>
+        Welcome,
+        <strong>
+            <?php echo $_SESSION['fullname']; ?>
+        </strong>
+    </div>
 
 </div>
 

@@ -1,25 +1,27 @@
 <?php
+// Protect this page and load the DB/session files used by the analytics interface.
 require_once("../configuration/session.php");
 require_once("../configuration/database.php");
 
 include("../includes/header.php");
 include("../includes/sidebar.php");
 
-// Dashboard Statistics
+// Gather quick summary counts so the dashboard cards can show the current system state.
 $totalCrimes = mysqli_fetch_assoc(
-    mysqli_query($conn,"SELECT COUNT(*) total FROM crime_reports")
+    mysqli_query($conn, "SELECT COUNT(*) total FROM crime_reports")
 )['total'];
 
 $totalBarangays = mysqli_fetch_assoc(
-    mysqli_query($conn,"SELECT COUNT(DISTINCT barangayID) total FROM crime_reports")
+    mysqli_query($conn, "SELECT COUNT(DISTINCT barangayID) total FROM crime_reports")
 )['total'];
 
 $totalCrimeTypes = mysqli_fetch_assoc(
-    mysqli_query($conn,"SELECT COUNT(*) total FROM crime_types")
+    mysqli_query($conn, "SELECT COUNT(*) total FROM crime_types")
 )['total'];
 
 $currentYear = date("Y");
 ?>
+
 <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <div class="content">
 
@@ -125,11 +127,10 @@ $currentYear = date("Y");
                         <option value="">All Crimes</option>
 
                         <?php
-
-                        $types=mysqli_query($conn,
+                        $types = mysqli_query($conn,
                         "SELECT * FROM crime_types ORDER BY crime_name");
 
-                        while($row=mysqli_fetch_assoc($types))
+                        while($row = mysqli_fetch_assoc($types))
                         {
                             ?>
 
@@ -139,7 +140,6 @@ $currentYear = date("Y");
 
                             <?php
                         }
-
                         ?>
 
                     </select>
@@ -157,11 +157,10 @@ $currentYear = date("Y");
                         <option value="">All Barangays</option>
 
                         <?php
-
-                        $brgy=mysqli_query($conn,
+                        $brgy = mysqli_query($conn,
                         "SELECT * FROM barangays ORDER BY barangay_name");
 
-                        while($b=mysqli_fetch_assoc($brgy))
+                        while($b = mysqli_fetch_assoc($brgy))
                         {
                             ?>
 
@@ -171,7 +170,6 @@ $currentYear = date("Y");
 
                             <?php
                         }
-
                         ?>
 
                     </select>
@@ -187,12 +185,10 @@ $currentYear = date("Y");
                     <select class="form-select" id="year">
 
                         <?php
-
-                        for($y=$currentYear;$y>=2020;$y--)
+                        for($y = $currentYear; $y >= 2020; $y--)
                         {
                             echo "<option>$y</option>";
                         }
-
                         ?>
 
                     </select>
@@ -223,7 +219,6 @@ $currentYear = date("Y");
 
                 </div>
 
-                
             </div>
 
         </div>

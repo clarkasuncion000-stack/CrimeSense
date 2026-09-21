@@ -1,11 +1,12 @@
 <?php
- 
-
+// Load the database connection and session protection before processing the form.
 require_once("../configuration/database.php");
 require_once("../configuration/session.php");
 
+// If the form was submitted with the Save button, insert the report into the database.
 if(isset($_POST['save']))
 {
+    // Read the submitted values from the form.
     $crimeTypeID = $_POST['crimeTypeID'];
     $barangayID = $_POST['barangayID'];
     $date = $_POST['date_committed'];
@@ -15,9 +16,10 @@ if(isset($_POST['save']))
     $description = $_POST['description'];
     $status = $_POST['status'];
 
-    // Change this if your session uses a different variable
+    // Record who reported the crime based on the current logged-in session user.
     $reported_by = $_SESSION['userID'];
 
+    // SQL insert command for a new crime report.
     $sql = "INSERT INTO crime_reports
             (
                 crimeTypeID,
@@ -44,8 +46,10 @@ if(isset($_POST['save']))
                 ?
             )";
 
+    // Prepare the query so values are inserted safely.
     $stmt = $conn->prepare($sql);
 
+    // Bind each value to its matching database field.
     $stmt->bind_param(
         "iissddssi",
         $crimeTypeID,
@@ -59,6 +63,7 @@ if(isset($_POST['save']))
         $reported_by
     );
 
+    // If insertion succeeds, show a success alert and redirect to the list page.
     if($stmt->execute())
     {
         echo "<script>
@@ -68,6 +73,7 @@ if(isset($_POST['save']))
     }
     else
     {
+        // If insertion fails, display the database error for debugging.
         echo "<div class='alert alert-danger'>
                 ".$stmt->error."
               </div>";
@@ -99,6 +105,7 @@ if(isset($_POST['save']))
 
 <div class="row">
 
+<!-- Map section where the user clicks a location for the incident -->
 <div class="col-md-12 mb-3">
 
     <label>Select Crime Location</label>
@@ -107,6 +114,7 @@ if(isset($_POST['save']))
 
 </div>
 
+<!-- Read-only latitude field filled by map click -->
 <div class="col-md-6 mb-3">
 
     <label>Latitude</label>
@@ -121,6 +129,7 @@ if(isset($_POST['save']))
 
 </div>
 
+<!-- Read-only longitude field filled by map click -->
 <div class="col-md-6 mb-3">
 
     <label>Longitude</label>
@@ -135,6 +144,7 @@ if(isset($_POST['save']))
 
 </div>
 
+<!-- Barangay selector for the reported location -->
 <div class="col-md-6 mb-3">
 
 <label>Barangay</label>
@@ -144,17 +154,14 @@ if(isset($_POST['save']))
 <option value="">Select Barangay</option>
 
 <?php
+$result = mysqli_query($conn, "SELECT * FROM barangays ORDER BY barangay_name");
 
-$result=mysqli_query($conn,"SELECT * FROM barangays ORDER BY barangay_name");
-
-while($row=mysqli_fetch_assoc($result))
+while($row = mysqli_fetch_assoc($result))
 {
 ?>
 
 <option value="<?= $row['barangayID']; ?>">
-
 <?= $row['barangay_name']; ?>
-
 </option>
 
 <?php } ?>
@@ -163,6 +170,7 @@ while($row=mysqli_fetch_assoc($result))
 
 </div>
 
+<!-- Date when the crime happened -->
 <div class="col-md-6 mb-3">
 
 <label>Date Committed</label>
@@ -175,6 +183,7 @@ required>
 
 </div>
 
+<!-- Time when the crime happened -->
 <div class="col-md-6 mb-3">
 
 <label>Time Committed</label>
@@ -187,6 +196,7 @@ required>
 
 </div>
 
+<!-- Alternative manual latitude input (not usually used with map click) -->
 <div class="col-md-6 mb-3">
 
 <label>Latitude</label>
@@ -199,6 +209,7 @@ placeholder="16.8732456">
 
 </div>
 
+<!-- Alternative manual longitude input -->
 <div class="col-md-6 mb-3">
 
 <label>Longitude</label>
@@ -211,6 +222,7 @@ placeholder="120.4567890">
 
 </div>
 
+<!-- Description of the event -->
 <div class="col-md-12 mb-3">
 
 <label>Description</label>
@@ -223,6 +235,7 @@ required></textarea>
 
 </div>
 
+<!-- Case status dropdown -->
 <div class="col-md-12 mb-3">
 
 <label>Status</label>
@@ -239,6 +252,7 @@ class="form-select">
 
 </div>
 
+<!-- Save or cancel button -->
 <div class="col-md-12">
 
 <button
@@ -246,16 +260,13 @@ class="btn btn-success"
 name="save">
 
 <i class="bi bi-save"></i>
-
 Save Report
 
 </button>
 
 <a href="crime_reports.php"
 class="btn btn-secondary">
-
 Cancel
-
 </a>
 
 </div>
@@ -269,17 +280,19 @@ Cancel
 </div>
 
 </div>
+
 <script>
+// Initialize the Leaflet map used for selecting a location.
 var map = L.map('map').setView([16.5236, 120.4870], 13);
 
-// OpenStreetMap Layer
+// Load the OpenStreetMap tiles as the base map.
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
 var marker;
 
-// Click on the map
+// When the user clicks the map, place a marker and fill the latitude/longitude fields.
 map.on('click', function(e) {
 
     if (marker) {
@@ -293,6 +306,7 @@ map.on('click', function(e) {
 
 });
 </script>
+
 <?php include("../includes/footer.php"); ?>
 
 </body>
